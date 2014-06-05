@@ -17,7 +17,11 @@
 \contentsline {subsection}{\numberline {5.1}Adding a repository}{8}{subsection.5.1}
 \contentsline {subsection}{\numberline {5.2}Editing a repository}{8}{subsection.5.2}
 \contentsline {subsection}{\numberline {5.3}Deleting a repository}{8}{subsection.5.3}
-\contentsline {section}{\numberline {6}Class summaries}{8}{section.6}
-\contentsline {subsection}{\numberline {6.1}Harvester}{8}{subsection.6.1}
-\contentsline {subsection}{\numberline {6.2}Repository}{9}{subsection.6.2}
-\contentsline {subsection}{\numberline {6.3}Web portal}{9}{subsection.6.3}
+\contentsline {section}{\numberline {6}Class summaries}{10}{section.6}
+\contentsline {subsection}{\numberline {6.1}Harvester}{10}{subsection.6.1}
+\contentsline {subsection}{\numberline {6.2}Repository}{10}{subsection.6.2}
+\contentsline {subsection}{\numberline {6.3}Web portal}{11}{subsection.6.3}
+\contentsline {section}{\numberline {A}Installation package}{11}{appendix.A}
+\contentsline {section}{\numberline {B}Database schema}{12}{appendix.B}
+\contentsline {subsection}{\numberline {B.1}Portal database}{12}{subsection.B.1}
+\contentsline {subsection}{\numberline {B.2}repository database}{12}{subsection.B.2}

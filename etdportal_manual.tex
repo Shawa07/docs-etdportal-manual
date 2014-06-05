@@ -6,6 +6,7 @@
 
 \usepackage{comment}
 
+\usepackage{graphicx}
 \usepackage[]{parskip}
 
 \usepackage{listings}
@@ -39,11 +40,11 @@
 \lstset{style=etdportal}
 
 \usepackage[ps2pdf,bookmarks=true]{hyperref}
-\hypersetup{pdftitle={Electronic Thesis\& Dissertation Portal Software User Manual},pdfauthor={Lighton Phiri}, pdfsubject={Repository Software}, pdfkeywords={Digital Libraries, ETDPortal, NRF, OAI-PMH, Repository}, pdfview={FitH},pdfstartview={Fit}}
+\hypersetup{pdftitle={Electronic Thesis\& Dissertation Portal Manual},pdfauthor={Lighton Phiri}, pdfsubject={Repository Software}, pdfkeywords={Digital Libraries, ETDPortal, NRF, OAI-PMH, Repository}, pdfview={FitH},pdfstartview={Fit}}
 
 
 %opening
-\title{Electronic Thesis\& Dissertation Portal Software User Manual}
+\title{Electronic Thesis\& Dissertation Portal Manual}
 \author{Version 1.2}
 
 \begin{document}
@@ -81,7 +82,7 @@ The third, most visible, component of the project is the Web Portal. This is wha
 
 \section{File layout}
 
-After installation all configuration files will reside in \path{/etc/etdportal}. All the application files will be in \path{/var/lib/tomcat6/webapps}. Lucenes' index files are stored in \path{/var/db/index}. Each servlet has its own folder within webapps, named after the servlet. Each of these folders will contain a \texttt{WEB-INF} folder, which is recognised by tomcat. Inside the \texttt{WEB-INF} folders of each servlet will be at least two more folders: \texttt{classes} and \texttt{lib}. The classes folder contains the java class files, which contain all the code for the servlets. The lib folders contain libraries necessary for the servlets to function. The \texttt{web.xml} file located in the \texttt{WEB-INF} directory of each servlet contains the path that each servlet will have when accessed via URL.
+After installation all configuration files will reside in \path{/etc/etdportal}. All the application files will be in \path{/var/lib/tomcat7/webapps}. Lucenes' index files are stored in \path{/var/db/index}. Each servlet has its own folder within webapps, named after the servlet. Each of these folders will contain a \texttt{WEB-INF} folder, which is recognised by tomcat. Inside the \texttt{WEB-INF} folders of each servlet will be at least two more folders: \texttt{classes} and \texttt{lib}. The classes folder contains the java class files, which contain all the code for the servlets. The lib folders contain libraries necessary for the servlets to function. The \texttt{web.xml} file located in the \texttt{WEB-INF} directory of each servlet contains the path that each servlet will have when accessed via URL.
 
 \section{Database layout}
 
@@ -113,7 +114,7 @@ Before installing the ETD software, a few prerequisite programs need to be insta
 Follow the prompts to finish installing Java. Next you must ensure that Tomcat6 is installed. To install tomcat, type the following into an open console window: 
 
 \begin{lstlisting}[language=bash]
- sudo apt-get install tomcat6
+ sudo apt-get install tomcat7
 \end{lstlisting}
 
 
@@ -136,7 +137,7 @@ Currently we are using the GIT version control system to work on the software. T
 \begin{lstlisting}[language=bash]
 git init 
 git clone ssh://etd@mufasa.cs.uct.ac.za/~etd/projects/etdportal 
-git checkout v1.1
+git checkout v1.2
 \end{lstlisting}
 
 Once you have the software available, open a console window and navigate to the folder containing the ETD software. To compile the software (on a non read-only disk, such as a hard drive) type the following into the console window: 
@@ -158,24 +159,23 @@ This will install the software into the correct locations. The make clean comman
 Now we need to set up the MySQL databases that the server will use to store records. We will need two separate databases for the software – one for the harvester and repository and the other for the Web portal. Create two empty databases with different usernames and passwords. 
 
 \begin{lstlisting}[language=SQL]
- CREATE USER 'monty'@'localhost' IDENTIFIED BY "some_pass"; 
- CREATE USER 'freddy'@'localhost' IDENTIFIED BY "some_pass"; 
- CREATE DATABASE my_dba; 
- CREATE DATABASE my_dbb; 
- GRANT ALL PRIVILEGES ON my_dba.* TO monty@localhost 
- GRANT ALL PRIVILEGES ON my_dbb.* TO freddy'@localhost
+ CREATE USER 'etduser'@'localhost' IDENTIFIED BY "etduser"; 
+ CREATE DATABASE etd_dba; 
+ CREATE DATABASE etd_dbb; 
+ GRANT ALL PRIVILEGES ON etd_dba.* TO monty@localhost 
+ GRANT ALL PRIVILEGES ON etd_dbb.* TO freddy'@localhost
 \end{lstlisting}
 
 We will use a SQL script to create the required tables: 
 
 \begin{lstlisting}[language=bash]
- mysql my_dba < harvest/WEB-INF /db/create_db.sql -user=monty -p
+ mysql etd_dba < harvest/WEB-INF /db/create_db.sql -user=etduser -p
 \end{lstlisting}
 
 And do the same for the other database. 
 
 \begin{lstlisting}[language=bash]
- mysql my_dbb < portal/WEB-INF /db/create_db.sql -user= freddy -p
+ mysql etd_dbb < portal/WEB-INF /db/create_db.sql -user= etduser -p
 \end{lstlisting}
 
 Once this is done, you should have two separate databases: the repository database with 2 tables in it and the portal database with 12 tables in it. This concludes the database setup.
@@ -194,7 +194,7 @@ Once there, copy the \texttt{config.xml.orig} to \texttt{config.xml} and customi
 In the configuration file, remember to change the preset database details that are there to the ones you set in the database set up. Now we need to add a manager account to the tomcat users file so that we can access the harvester control panel securely. 
 
 \begin{lstlisting}[language=bash]
- sudo gedit /var/lib/tomcat6/conf/tomcat-users.xml
+ sudo gedit /var/lib/tomcat7/conf/tomcat-users.xml
 \end{lstlisting}
 
 Once open add a new role for netdmanager in the <tomcat-users> tag and add a new username and password with this role. 
@@ -208,7 +208,7 @@ Once open add a new role for netdmanager in the <tomcat-users> tag and add a new
 
 The servlets will now function, but they will not be easy to access, so we need to make the portal servlet the first thing tomcat shows, and then we need to make tomcat the first thing apache shows.
 
-Open \texttt{/var/lib/tomcat6/conf/server.xml} (as root) and add 
+Open \texttt{/var/lib/tomcat7/conf/server.xml} (as root) and add 
 
 \begin{lstlisting}[language=XML]
  <Context path="" docBase=portal//> 
@@ -238,12 +238,12 @@ Finally we need to restart the apache web server:
 And restart the tomcat server: 
 
 \begin{lstlisting}[language=bash]
- /etc/init.d/tomcat6 restart
+ /etc/init.d/tomcat7 restart
 \end{lstlisting}
 
 \subsection{Crobtab}
 
-Once the portal has been set up, we need to set up cron (linux scheduler) to regularly run the harvester program. The harvester program will automatically decide which repositories need to be harvested and do so accordingly, but it needs to be called regularly to do this. After the harvester finishes a harvest, the Web portal needs to be run to keep the index up to date. The easiest way to do this is using a shell script. The script is located at \path{/var/lib/tomcat6/webapps/Harvest.sh}
+Once the portal has been set up, we need to set up cron (linux scheduler) to regularly run the harvester program. The harvester program will automatically decide which repositories need to be harvested and do so accordingly, but it needs to be called regularly to do this. After the harvester finishes a harvest, the Web portal needs to be run to keep the index up to date. The easiest way to do this is using a shell script. The script is located at \path{/var/lib/tomcat7/webapps/Harvest.sh}
 
 Adding the script to a cron job that runs every hour is done as follows: 
 
@@ -254,7 +254,7 @@ Adding the script to a cron job that runs every hour is done as follows:
 and then enter the following into the editor provided : 
 
 \begin{lstlisting}[language=bash]
- 0 * * * * /var/lib/tomcat6/webapps/Harvest.sh
+ 0 * * * * /var/lib/tomcat7/webapps/Harvest.sh
 \end{lstlisting}
 
 This will cause cron to run the Harvest script every hour, on the hour.
@@ -265,16 +265,32 @@ To access the control panel you must click on Admin on the bottom of the left si
 
 \subsection{Adding a repository}
 
+\begin{figure}
+ \centering
+ \includegraphics[width=\textwidth]{adding_repository_infomation_x.eps}
+\end{figure}
+
+
 To add a new repository for harvesting, click the Add Repository link at the bottom of the center window. The window below will appear. Here is a summary of what each of the fields below mean.
 ID: The short (no spaces) name that is used to identify where records come from (can't change once set). Name: Full Institution name BaseURL: The url of the servlet that we wish to harvest from. Must include the http://. MetadataPrefix: The format of the metadata we wish to harvest. Some repositories will support multiple formats. SetSpec: The remote server's set that we wish to harvest. Leave this empty to harvest the whole repository. Harvest Interval: Time in seconds between consecutive harvests of this repository. Last Harvest: When to harvest from (will automatically be set to the last harvest date after each harvest). Delete this to perform a full re-harvest of a repository.
 The required fields are ID, Name, BaseURL and metadataPrefix. Once these are filled in, you can press save to save the repository. At the next scheduled harvest, the harvester will perform a full harvest of this new repository.
 
 \subsection{Editing a repository}
 
+\begin{figure}
+ \centering
+ \includegraphics[width=\textwidth]{editing_repository_infomation_x.eps}
+\end{figure}
+
 To edit a repository that is already there, simply click on the repository's ID tag in the repository list:
 This will bring up the same form as for creating a new repository, except with the clicked-on repository's settings. Once done editing, remember to click save.
 
 \subsection{Deleting a repository}
+
+\begin{figure}
+ \centering
+ \includegraphics[width=\textwidth]{deleting_repository_infomation_x.eps}
+\end{figure}
 
 To delete repository, click on the repository's ID, as above in Editing a repository, but instead of clicking save at the bottom of the screen, click delete repository.
 
@@ -359,5 +375,57 @@ ResultFormat: Formats the results that have been returned from a browsing reques
 ResumptionToken: Forms an object that represents the resumption token returned by the repository in a list records request.
 
 SearchEngine: This class is used to run a search query on the index created by the IndexFiles class using the Lucene library.
+
+\appendix
+
+\section{Installation package}
+
+\begin{lstlisting}[language=bash]
+phiri@phiri-PROLINE-DH55TC:~/Sandbox$ tree -d etdportal/
+etdportal/
+├── docs
+├── harvester
+│   ├── style
+│   └── WEB-INF
+│       ├── classes
+│       ├── db
+│       └── lib
+├── installation
+├── OAI-PMH
+│   └── WEB-INF
+│       ├── classes
+│       └── lib
+├── portal
+│   ├── images
+│   ├── style
+│   └── WEB-INF
+│       ├── classes
+│       ├── db
+│       ├── lib
+│       └── xsl
+├── RSS
+│   └── WEB-INF
+│       ├── classes
+│       └── lib
+├── scripts
+└── summary
+    └── WEB-INF
+        ├── classes
+        └── lib
+
+29 directories
+phiri@phiri-PROLINE-DH55TC:~/Sandbox$  
+\end{lstlisting}
+
+
+\section{Database schema}
+
+\subsection{Portal database}
+
+
+
+\subsection{repository database}
+
+
 
 \end{document}
