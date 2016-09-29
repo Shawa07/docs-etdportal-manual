@@ -212,11 +212,11 @@ In the configuration file, remember to change the preset database details that a
  sudo gedit /var/lib/tomcat7/conf/tomcat-users.xml
 \end{lstlisting}
 
-Once open add a new role for netdmanager in the \textless tomcat-users\textgreater \, tag and add a new username and password with this role. 
+Once open add a new role for etdmanager in the \textless tomcat-users\textgreater \, tag and add a new username and password with this role. 
 
 \begin{lstlisting}[language=XML]
- <role rolename=netdmanager/> 
- <user username=mandy password=your\_pass roles=netdmanager/>
+ <role rolename=etdmanager/> 
+ <user username=mandy password=your\_pass roles=etdmanager/>
 \end{lstlisting}
 
 \subsection{Apache2}
@@ -269,7 +269,7 @@ Adding the script to a cron job that runs every hour is done as follows:
 and then enter the following into the editor provided : 
 
 \begin{lstlisting}[language=bash]
- 0 * * * * /var/lib/tomcat7/webapps/Harvest.sh
+ 0 * * * * /var/lib/tomcat7/webapps/harvester/Harvest.sh
 \end{lstlisting}
 
 This will cause cron to run the Harvest script every hour, on the hour.
