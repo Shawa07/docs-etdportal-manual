@@ -40,12 +40,28 @@
 \lstset{style=etdportal}
 
 \usepackage[ps2pdf,bookmarks=true]{hyperref}
-\hypersetup{pdftitle={Electronic Thesis\& Dissertation Portal Manual},pdfauthor={Lighton Phiri}, pdfsubject={Repository Software}, pdfkeywords={Digital Libraries, ETDPortal, NRF, OAI-PMH, Repository}, pdfview={FitH},pdfstartview={Fit}}
+\hypersetup{pdftitle={Electronic Thesis and Dissertation Portal Manual},pdfauthor={Lawrence Webley, Lighton Phiri, Hussein Suleman}, pdfsubject={Repository Software}, pdfkeywords={Digital Libraries, ETDPortal, NRF, OAI-PMH, Repository}, pdfview={FitH},pdfstartview={Fit}}
 
+\hypersetup{colorlinks,linkcolor=blue,citecolor=blue,urlcolor=blue,bookmarksnumbered}
+
+% This needs to be after hyperref
+\usepackage{cleveref}
 
 %opening
-\title{Electronic Thesis\& Dissertation Portal Manual}
-\author{Version 1.2}
+\title{Electronic Thesis and Dissertation Portal Manual\\Version 1.2}
+\author{
+Authors\\
+Lawrence Webley\\
+\textless \href{mailto:lwebley@cs.uct.ac.za}{lwebley@cs.uct.ac.za} \textgreater \\
+Lighton Phiri\\
+\textless \href{mailto:lphiri@cs.uct.ac.za}{lphiri@cs.uct.ac.za} \textgreater \\
+Hussein Suleman\\ 
+\textless \href{mailto:hussein@cs.uct.ac.za}{hussein@cs.uct.ac.za} \textgreater \\
+}
+\date
+{
+September 2016
+}
 
 \begin{document}
 
@@ -88,7 +104,7 @@ After installation all configuration files will reside in \path{/etc/etdportal}.
 
 There are two separate databases used for the harvester and repository backend and the Web portal front end.
 
-\subsection{Harvester\& repository database}
+\subsection{Harvester and repository database}
 
 All records in the database are stored in a table named Archive which contains all the harvested records. The records in this database are inserted by the harvester and read by the OAI-PMH repository software. The fields contained are: ID (the record identifier), Date (the date the record was harvested), MetaType (the xml format record), Source (the URL of the repository this record was harvested from), Deleted (whether or not this record has been deleted - the records are never totally deleted; they are simply marked as such for synchronisation issues), About (any additional data about the record that was retrieved) and SetSpec (the repository set that this record belongs to).
 The primary key of the table is a combination of the ID and the MetaType fields. This means that there can be multiple records with the same ID, as long as their metadata formats are not the same (same record in a different format).
@@ -100,14 +116,14 @@ The portal database contains a collection of interlinked tables which are used t
 
 \section{Installation process}
 
-The following instructions assume that the server will be running Ubuntu 10.04+\footnote{In theory, software SHOULD work on later versions of ubuntu}. If you are running a different operating system, please adapt them accordingly.
+The following instructions assume that the server will be running Ubuntu---testing has been done on Ubuntu 10.04 and 16.04. If you are running a different operating system, please adapt them accordingly.
 
 \subsection{Pre-requisites}
 
 Before installing the ETD software, a few prerequisite programs need to be installed. If any of the below programs are not installed, follow the steps below to install them. Firstly the Java JDK must be available. To install Java type the following into an open console window: 
 
 \begin{lstlisting}[language=bash]
- sudo apt-get install sun-java6-jdk
+ sudo apt-get install openjdk-8-jdk
 \end{lstlisting}
 
 
@@ -135,8 +151,7 @@ And follow the prompts to install it. This should complete the installation of t
 Currently we are using the GIT version control system to work on the software. To get the latest version, browse to a folder where you would like to put the installation files and type the following:
 
 \begin{lstlisting}[language=bash]
-git init 
-git clone ssh://etd@mufasa.cs.uct.ac.za/~etd/projects/etdportal 
+git clone git@simba.cs.uct.ac.za:etdportal.git 
 git checkout v1.2
 \end{lstlisting}
 
@@ -156,26 +171,26 @@ This will install the software into the correct locations. The make clean comman
 
 \subsection{Database setup}
 
-Now we need to set up the MySQL databases that the server will use to store records. We will need two separate databases for the software – one for the harvester and repository and the other for the Web portal. Create two empty databases with different usernames and passwords. 
+Now we need to set up the MySQL databases that the server will use to store records. We will need two separate databases for the software---one for the harvester and repository and the other for the Web portal. Create two empty databases with different usernames and passwords. 
 
 \begin{lstlisting}[language=SQL]
- CREATE USER 'etduser'@'localhost' IDENTIFIED BY "etduser"; 
+ CREATE USER 'etduser'@'localhost' IDENTIFIED BY 'etduser'; 
  CREATE DATABASE etd_dba; 
  CREATE DATABASE etd_dbb; 
- GRANT ALL PRIVILEGES ON etd_dba.* TO etduser@localhost
- GRANT ALL PRIVILEGES ON etd_dbb.* TO etduser@localhost
+GRANT ALL ON etd_dba.* TO 'etduser'@'localhost';
+GRANT ALL ON etd_dba.* TO 'etduser'@'localhost';
 \end{lstlisting}
 
 We will use a SQL script to create the required tables: 
 
 \begin{lstlisting}[language=bash]
- mysql etd_dba < harvest/WEB-INF /db/create_db.sql -user=etduser -p
+ mysql etd_dba < harvester/WEB-INF/db/create_db.sql -u etduser -p
 \end{lstlisting}
 
 And do the same for the other database. 
 
 \begin{lstlisting}[language=bash]
- mysql etd_dbb < portal/WEB-INF /db/create_db.sql -user= etduser -p
+ mysql etd_dbb < portal/WEB-INF/db/create_db.sql -u etduser -p
 \end{lstlisting}
 
 Once this is done, you should have two separate databases: the repository database with 2 tables in it and the portal database with 12 tables in it. This concludes the database setup.
@@ -197,7 +212,7 @@ In the configuration file, remember to change the preset database details that a
  sudo gedit /var/lib/tomcat7/conf/tomcat-users.xml
 \end{lstlisting}
 
-Once open add a new role for netdmanager in the <tomcat-users> tag and add a new username and password with this role. 
+Once open add a new role for netdmanager in the \textless tomcat-users\textgreater \, tag and add a new username and password with this role. 
 
 \begin{lstlisting}[language=XML]
  <role rolename=netdmanager/> 
@@ -248,7 +263,7 @@ Once the portal has been set up, we need to set up cron (linux scheduler) to reg
 Adding the script to a cron job that runs every hour is done as follows: 
 
 \begin{lstlisting}[language=bash]
- crontab –e
+ crontab -e
 \end{lstlisting}
 
 and then enter the following into the editor provided : 
@@ -267,11 +282,14 @@ To access the control panel you must click on Admin on the bottom of the left si
 
 \begin{figure}[h]
  \centering
- \includegraphics[width=\textwidth]{adding_repository_infomation_x.eps}
+ \fbox{%
+   \includegraphics[width=\textwidth]{adding_repository_infomation_x.eps}%
+ }%
+ \caption{Adding a new repository entry}
+ \label{adding_repository_information}
 \end{figure}
 
-
-To add a new repository for harvesting, click the Add Repository link at the bottom of the center window. The window below will appear. Here is a summary of what each of the fields below mean.
+To add a new repository for harvesting, click the Add Repository link at the bottom of the center window. The screenshot in \Cref{adding_repository_information} will appear. Here is a summary of what each of the fields below mean.
 ID: The short (no spaces) name that is used to identify where records come from (can't change once set). Name: Full Institution name BaseURL: The url of the servlet that we wish to harvest from. Must include the http://. MetadataPrefix: The format of the metadata we wish to harvest. Some repositories will support multiple formats. SetSpec: The remote server's set that we wish to harvest. Leave this empty to harvest the whole repository. Harvest Interval: Time in seconds between consecutive harvests of this repository. Last Harvest: When to harvest from (will automatically be set to the last harvest date after each harvest). Delete this to perform a full re-harvest of a repository.
 The required fields are ID, Name, BaseURL and metadataPrefix. Once these are filled in, you can press save to save the repository. At the next scheduled harvest, the harvester will perform a full harvest of this new repository.
 
@@ -279,20 +297,28 @@ The required fields are ID, Name, BaseURL and metadataPrefix. Once these are fil
 
 \begin{figure}[h]
  \centering
- \includegraphics[width=\textwidth]{editing_repository_infomation_x.eps}
+ \fbox{%
+   \includegraphics[width=\textwidth]{editing_repository_infomation_x-stroked.eps}%
+ }%
+ \caption{Editing repository entries information}
+ \label{editing_repository_information}
 \end{figure}
 
-To edit a repository that is already there, simply click on the repository's ID tag in the repository list:
+To edit a repository that is already there, simply click on the repository's ID tag in the repository list, as highlighted in \Cref{editing_repository_information}.
 This will bring up the same form as for creating a new repository, except with the clicked-on repository's settings. Once done editing, remember to click save.
 
 \subsection{Deleting a repository}
 
 \begin{figure}[h]
  \centering
- \includegraphics[width=\textwidth]{deleting_repository_infomation_x.eps}
+ \fbox{%
+   \includegraphics[width=\textwidth]{deleting_repository_infomation_x-stroked.eps}%
+ }%
+ \caption{Deleting existing repository entries}
+ \label{deleting_repository_entry}
 \end{figure}
 
-To delete repository, click on the repository's ID, as above in Editing a repository, but instead of clicking save at the bottom of the screen, click delete repository.
+To delete repository, click on the repository's ID, as above in Editing a repository, but instead of clicking save at the bottom of the screen, click delete repository, as shown in \Cref{deleting_repository_entry}.
 
 \section{Class summaries}
 
@@ -422,10 +448,154 @@ phiri@phiri-PROLINE-DH55TC:~/Sandbox$
 
 \subsection{Portal database}
 
+\begin{lstlisting}[language=SQL]
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
+SET SQL_MODE='ALLOW_INVALID_DATES';
 
+DROP TABLE IF EXISTS Archive;
+DROP TABLE IF EXISTS Counter;
+DROP TABLE IF EXISTS Repositories;
+DROP TABLE IF EXISTS CountCache;
 
-\subsection{repository database}
+--
+-- Table structure for table `Archive`
+--
 
+CREATE TABLE `Archive` (
+  `ID` varchar(200) NOT NULL DEFAULT '', 
+  `Date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `MetaType` varchar(16) NOT NULL DEFAULT '', 
+  `Source` varchar(2048) DEFAULT NULL,
+  `MetaData` mediumblob,
+  `Deleted` tinyint(1) NOT NULL DEFAULT '0',
+  `About` blob NOT NULL,
+  `SetSpec` varchar(64) NOT NULL DEFAULT 'None',
+  PRIMARY KEY (`ID`,`MetaType`),
+  KEY `IDX_METATYPE` (`MetaType`),
+  KEY `SourceID` (`Source`(128),`ID`(128)),
+  KEY `SourceDeletedID` (`Source`(128),`Deleted`,`ID`(128)),
+  KEY `Source_idx` (`Source`(333)),
+  KEY `MetaTypeDate` (`MetaType`,`Date`),
+  KEY `DateMetaType` (`Date`,`MetaType`),
+  KEY `MetaTypeDateID` (`MetaType`,`Date`,`ID`),
+  KEY `MetaTypesetSpecDateID` (`MetaType`,`SetSpec`,`Date`,`ID`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;   
 
+--
+-- Table structure for table `Counter`
+--
+
+CREATE TABLE `Counter` (
+  `setSpec` varchar(64) NOT NULL,
+  `count` int(11) DEFAULT NULL,
+  PRIMARY KEY (`setSpec`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+--
+-- Table structure for table `Repositories`
+--
+
+CREATE TABLE `Repositories` (
+  `ID` varchar(64) NOT NULL,
+  `name` varchar(128) NOT NULL,
+  `isRunning` tinyint(1) NOT NULL DEFAULT '0',
+  `harvestStatus` varchar(256) NOT NULL DEFAULT '',
+  `baseURL` varchar(2048) NOT NULL,
+  `metadataFormat` varchar(1024) NOT NULL DEFAULT 'oai_dc',
+  `setSpec` varchar(16384) NOT NULL DEFAULT '',
+  `dateFrom` varchar(64) NOT NULL DEFAULT '',
+  `harvestInterval` int(11) NOT NULL DEFAULT '3000',
+  `timeout` int(11) DEFAULT '180000',
+  `resumptionToken` varchar(1024) DEFAULT NULL,
+  PRIMARY KEY (`ID`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+--
+-- Table structure for table `CountCache`
+--
+
+CREATE TABLE `CountCache` (
+  `Date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `MetaType` varchar(16) NOT NULL DEFAULT '',
+  `fromdate` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `untildate` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `SetSpec` varchar(64) NOT NULL DEFAULT '',
+  `count` int(11) DEFAULT NULL,
+  PRIMARY KEY (`MetaType`,`fromdate`,`untildate`,`SetSpec`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+SET character_set_client = @saved_cs_client;
+\end{lstlisting}
+
+\subsection{Havester database}
+
+\begin{lstlisting}[language=SQL]
+CREATE TABLE `Archive` (
+  `ID` varchar(200) NOT NULL DEFAULT '', 
+  `Date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `MetaType` varchar(16) NOT NULL DEFAULT '', 
+  `Source` varchar(2048) DEFAULT NULL,
+  `MetaData` mediumblob,
+  `Deleted` tinyint(1) NOT NULL DEFAULT '0',
+  `About` blob NOT NULL,
+  `SetSpec` varchar(64) NOT NULL DEFAULT 'None',
+  PRIMARY KEY (`ID`,`MetaType`),
+  KEY `IDX_METATYPE` (`MetaType`),
+  KEY `SourceID` (`Source`(128),`ID`(128)),
+  KEY `SourceDeletedID` (`Source`(128),`Deleted`,`ID`(128)),
+  KEY `Source_idx` (`Source`(333)),
+  KEY `MetaTypeDate` (`MetaType`,`Date`),
+  KEY `DateMetaType` (`Date`,`MetaType`),
+  KEY `MetaTypeDateID` (`MetaType`,`Date`,`ID`),
+  KEY `MetaTypesetSpecDateID` (`MetaType`,`SetSpec`,`Date`,`ID`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;   
+
+--
+-- Table structure for table `Counter`
+--
+
+CREATE TABLE `Counter` (
+  `setSpec` varchar(64) NOT NULL,
+  `count` int(11) DEFAULT NULL,
+  PRIMARY KEY (`setSpec`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+--
+-- Table structure for table `Repositories`
+--
+
+CREATE TABLE `Repositories` (
+  `ID` varchar(64) NOT NULL,
+  `name` varchar(128) NOT NULL,
+  `isRunning` tinyint(1) NOT NULL DEFAULT '0',
+  `harvestStatus` varchar(256) NOT NULL DEFAULT '',
+  `baseURL` varchar(2048) NOT NULL,
+  `metadataFormat` varchar(1024) NOT NULL DEFAULT 'oai_dc',
+  `setSpec` varchar(16384) NOT NULL DEFAULT '',
+  `dateFrom` varchar(64) NOT NULL DEFAULT '',
+  `harvestInterval` int(11) NOT NULL DEFAULT '3000',
+  `timeout` int(11) DEFAULT '180000',
+  `resumptionToken` varchar(1024) DEFAULT NULL,
+  PRIMARY KEY (`ID`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+--
+-- Table structure for table `CountCache`
+--
+
+CREATE TABLE `CountCache` (
+  `Date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `MetaType` varchar(16) NOT NULL DEFAULT '',
+  `fromdate` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `untildate` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `SetSpec` varchar(64) NOT NULL DEFAULT '',
+  `count` int(11) DEFAULT NULL,
+  PRIMARY KEY (`MetaType`,`fromdate`,`untildate`,`SetSpec`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+SET character_set_client = @saved_cs_client;
+
+\end{lstlisting}
 
 \end{document}
