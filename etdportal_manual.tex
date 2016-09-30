@@ -47,16 +47,42 @@
 % This needs to be after hyperref
 \usepackage{cleveref}
 
+\usepackage{csquotes}
+\usepackage[citestyle=authoryear,maxbibnames=100,maxcitenames=2,isbn=false,url=true,natbib=true,urldate=long,hyperref=true,backend=biber]{biblatex}
+
+\DefineBibliographyStrings{english}{%
+  references = {Bibliography},% replace "references" with "bibliography"  for `book`/`report`
+}
+
+\makeatletter
+
+\let\abx@macro@citeOrig\abx@macro@cite
+\renewbibmacro{cite}{%
+   \bibhyperref{%
+   \let\bibhyperref\relax\relax%
+   \abx@macro@citeOrig%
+   }%
+}
+\let\abx@macro@textciteOrig\abx@macro@textcite
+\renewbibmacro{textcite}{%
+   \bibhyperref{%
+   \let\bibhyperref\relax\relax%
+   \abx@macro@textciteOrig%
+   }%
+}%
+
+\addbibresource{etdportal_manual.bib}
+
 %opening
 \title{Electronic Thesis and Dissertation Portal Manual\\Version 1.2}
 \author{
 Authors\\
 Lawrence Webley\\
-\textless \href{mailto:lwebley@cs.uct.ac.za}{lwebley@cs.uct.ac.za} \textgreater \\
+\texttt{<\href{mailto:lwebley@cs.uct.ac.za}{lwebley@cs.uct.ac.za}>} \\
 Lighton Phiri\\
-\textless \href{mailto:lphiri@cs.uct.ac.za}{lphiri@cs.uct.ac.za} \textgreater \\
+\texttt{<\href{mailto:lphiri@cs.uct.ac.za}{lphiri@cs.uct.ac.za}>} \\
 Hussein Suleman\\ 
-\textless \href{mailto:hussein@cs.uct.ac.za}{hussein@cs.uct.ac.za} \textgreater \\
+\texttt{<\href{mailto:hussein@cs.uct.ac.za}{hussein@cs.uct.ac.za}>} \\
 }
 \date
 {
@@ -73,10 +99,14 @@ September 2016
 \newpage
 
 \section{General overview}
+\label{sec:general_overview}
 
-The ETD (Electronic Thesis and Dissertations) repository and portal software is composed of three distinct components, each of which operates fairly independently of the other. The three sections are:
+The Electronic Thesis and Dissertations repository and portal (ETDPortal) software is a scalable repository service application for creating repository federated services. It is developed and maintained by the \href{http://dl.cs.uct.ac.za}{Digital Libraries Laboratory} at the \href{http://www.uct.ac.za}{University of Cape Town}. Technical implementation details and background information is outlined by \citep{Webley2011}.
+
+ETDPortal is composed of three distinct components, each of which operates fairly independently of the other. The three sections are:
 
 \subsection{Harvester module}
+\label{sec:general_overview:harvester_module}
 
 This program is run by the system at regular intervals and serves to download thesis records from institutions and then store them in the local database. The entire thesis is not downloaded, simply the metadata, including the thesis name, the author and a short summary of the paper. These records are stored in an XML format (usually OAI\_DC or OAI\_MARC). The servers that this program harvests from are known as repositories and are located at academic. These repositories provide access to their records via the OAI-PMH protocol, and the harvester uses this protocol to harvest all new records on the remote server (i.e. the harvester does not fetch the entire database each time, only records that have changed or been added).
 
@@ -85,6 +115,7 @@ When the harvester runs it will sequentially go through each of the repositories
 Another section of the harvester is the Harvester Control Panel. This is accessed via the front Web page (the Web portal) and is used to administer and manage the list of repositories. The control panel can be used to add, modify and delete repositories as well as initiate an immediate harvest on any of the available repositories. It also allows an administrator to see the current progress of a given harvest and see the results of past harvests.
 
 \subsection{Local repository module}
+\label{sec:general_overview:local_repository_module}
 
 The second major part of the project is the local repository. All the records that have been harvested by the harvester component are stored in a local MySQL database, which is not accessible directly from the outside. The repository component provides an OAI-PMH read-only interface through which other servers can access the local database. The repository accepts Web requests and replies using XML pages, which conform to the OAI-PMH 2.0 standard. This means that any remote institution that would like to download or access the database can use this repository to do it programmatically. The harvester and the repository share a common SQL database and common tables.
 
@@ -93,32 +124,99 @@ The repository is also how the front end Web component of the program access the
 Another smaller part of the repository is the RSS and Summary software. This small program will provide a RSS feed to interested users, listing the latest records to be added to the server and will provide statistics detailing the number of records stored in the system, and from which institution they come.
 
 \subsection{Web portal module}
+\label{sec:general_overview:web_portal_module}
 
-The third, most visible, component of the project is the Web Portal. This is what online users see when they access the ETD site. It uses the Lucene\footnote{http://lucene.apache.org} open source search engine to search through records. The front end portal uses the local repository to access the harvested records. It has its own tables in a MySQL database, which it uses to index the records it reads from the repository. These are the tables it uses to process search queries from the Web.
+The third, most visible, component of the project is the Web Portal. This is what online users see when they access the ETD site. It uses the Lucene\footnote{\url{http://lucene.apache.org}} open source search engine to search through records. The front end portal uses the local repository to access the harvested records. It has its own tables in a MySQL database, which it uses to index the records it reads from the repository. These are the tables it uses to process search queries from the Web.
 
 \section{File layout}
+\label{sec:file_layout}
 
 After installation all configuration files will reside in \path{/etc/etdportal}. All the application files will be in \path{/var/lib/tomcat7/webapps}. Lucenes' index files are stored in \path{/var/db/index}. Each servlet has its own folder within webapps, named after the servlet. Each of these folders will contain a \texttt{WEB-INF} folder, which is recognised by tomcat. Inside the \texttt{WEB-INF} folders of each servlet will be at least two more folders: \texttt{classes} and \texttt{lib}. The classes folder contains the java class files, which contain all the code for the servlets. The lib folders contain libraries necessary for the servlets to function. The \texttt{web.xml} file located in the \texttt{WEB-INF} directory of each servlet contains the path that each servlet will have when accessed via URL.
 
 \section{Database layout}
+\label{sec:database_layout}
 
 There are two separate databases used for the harvester and repository backend and the Web portal front end.
 
 \subsection{Harvester and repository database}
+\label{sec:database_layout:harvester_and_repository_database}
 
-All records in the database are stored in a table named Archive which contains all the harvested records. The records in this database are inserted by the harvester and read by the OAI-PMH repository software. The fields contained are: ID (the record identifier), Date (the date the record was harvested), MetaType (the xml format record), Source (the URL of the repository this record was harvested from), Deleted (whether or not this record has been deleted - the records are never totally deleted; they are simply marked as such for synchronisation issues), About (any additional data about the record that was retrieved) and SetSpec (the repository set that this record belongs to).
+All records in the database are stored in a table named Archive which contains all the harvested records. The records in this database are inserted by the harvester and read by the OAI-PMH repository software. The fields contained are: 
+
+\paragraph{ID} 
+
+The record identifier
+
+\paragraph{Date} 
+
+The date the record was harvested
+
+\paragraph{MetaType} 
+
+The xml format record
+
+\paragraph{Source} 
+
+The URL of the repository this record was harvested from
+
+\paragraph{Deleted} 
+
+Whether or not this record has been deleted---the records are never totally deleted; they are simply marked as such for synchronisation issues
+
+\paragraph{About} 
+
+Any additional data about the record that was retrieved
+
+\paragraph{SetSpec} 
+
+The repository set that this record belongs to
+
 The primary key of the table is a combination of the ID and the MetaType fields. This means that there can be multiple records with the same ID, as long as their metadata formats are not the same (same record in a different format).
-The second table is named Repositories and contains a list of the repositories that can be harvested. This list is controlled through the harvester control panel. The fields in this table are: ID (Repository set name), name (repository human readable name), isRunning (determines whether a harvest is currently running on a given repository), harvestStatus (details the last harvest run, or the progress of a current one), baseURL (the URL of the remote service we would like to harvest from), metadataFormat (the format we would like to harvest from the remote server), setSpec ( the short (no spaces) name that will be used as the set identifier for the target repository), dateFrom ( the last time this repository was harvested) and harvestInterval (the minimum time in seconds between harvest attempts on the repository).
+
+The second table is named Repositories and contains a list of the repositories that can be harvested. This list is controlled through the harvester control panel. The fields in this table are: 
+
+\paragraph{ID} Repository set name
+
+\paragraph{name} 
+
+Repository human readable name
+
+\paragraph{isRunning} 
+
+determines whether a harvest is currently running on a given repository
+
+\paragraph{harvestStatus} 
+
+Details the last harvest run, or the progress of a current one
+
+\paragraph{baseURL} The URL of the remote service we would like to harvest from
+
+\paragraph{metadataFormat} 
+
+The format we would like to harvest from the remote server
+
+\paragraph{setSpec} 
+
+The short (no spaces) name that will be used as the set identifier for the target repository
+
+\paragraph{dateFrom} 
+
+The last time this repository was harvested 
+
+\paragraph{harvestInterval} The minimum time in seconds between harvest attempts on the repository
 
 \subsection{Web portal database}
+\label{sec:database_layout:web_portal_database}
 
 The portal database contains a collection of interlinked tables which are used to efficiently browse through the records by category. The tables are named descriptively and thus the purpose of most is self evident. These tables are automatically generated by the portal's indexer and should not be manually edited.
 
 \section{Installation process}
+\label{sec:installation_process}
 
 The following instructions assume that the server will be running Ubuntu---testing has been done on Ubuntu 10.04 and 16.04. If you are running a different operating system, please adapt them accordingly.
 
 \subsection{Pre-requisites}
+\label{sec:installation_process:prerequisites}
 
 Before installing the ETD software, a few prerequisite programs need to be installed. If any of the below programs are not installed, follow the steps below to install them. Firstly the Java JDK must be available. To install Java type the following into an open console window: 
 
@@ -147,6 +245,7 @@ And follow the prompts to install it. This should complete the installation of t
 \end{lstlisting}
 
 \subsection{Installation}
+\label{sec:installation_process:installation}
 
 Currently we are using the GIT version control system to work on the software. To get the latest version, browse to a folder where you would like to put the installation files and type the following:
 
@@ -169,13 +268,14 @@ This will compile the necessary files for use. Next type in the following to ins
 This will install the software into the correct locations. The make clean command is available to delete all compiled or auto-generated files in case you would like to recompile the project.
 
 \subsection{Database setup}
+\label{sec:installation_process:database_setup}
 
 Now we need to set up the MySQL databases that the server will use to store records. We will need two separate databases for the software---one for the harvester and repository and the other for the Web portal. Create two empty databases with different usernames and passwords. 
 
 \begin{lstlisting}[language=SQL]
- CREATE USER 'etduser'@'localhost' IDENTIFIED BY 'etduser'; 
- CREATE DATABASE etd_dba; 
- CREATE DATABASE etd_dbb; 
+CREATE USER 'etduser'@'localhost' IDENTIFIED BY 'etduser'; 
+CREATE DATABASE etd_dba; 
+CREATE DATABASE etd_dbb; 
 GRANT ALL ON etd_dba.* TO 'etduser'@'localhost';
 GRANT ALL ON etd_dba.* TO 'etduser'@'localhost';
 \end{lstlisting}
@@ -195,6 +295,7 @@ And do the same for the other database.
 Once this is done, you should have two separate databases: the repository database with 2 tables in it and the portal database with 12 tables in it. This concludes the database setup.
 
 \subsection{Configuration files}
+\label{sec:installation_process:configuration_files}
 
 Now we need to configure the software for the local system. To start doing this we need to create a basic configuration file. Start by navigating to \path{/etc/etdportal/}.
 
@@ -211,7 +312,7 @@ In the configuration file, remember to change the preset database details that a
  sudo gedit /var/lib/tomcat7/conf/tomcat-users.xml
 \end{lstlisting}
 
-Once open add a new role for etdmanager in the \textless tomcat-users\textgreater \, tag and add a new username and password with this role. 
+Once open add a new role for etdmanager in the \texttt{<tomcat-users>} tag and add a new username and password with this role. 
 
 \begin{lstlisting}[language=XML]
  <role rolename=etdmanager/> 
@@ -219,6 +320,7 @@ Once open add a new role for etdmanager in the \textless tomcat-users\textgreate
 \end{lstlisting}
 
 \subsection{Apache2}
+\label{sec:installation_process:apache2}
 
 The servlets will now function, but they will not be easy to access, so we need to make the portal servlet the first thing tomcat shows, and then we need to make tomcat the first thing apache shows.
 
@@ -255,7 +357,8 @@ And restart the tomcat server:
  /etc/init.d/tomcat7 restart
 \end{lstlisting}
 
-\subsection{Crobtab}
+\subsection{Crontab}
+\label{sec:installation_process:crontab}
 
 Once the portal has been set up, we need to set up cron (linux scheduler) to regularly run the harvester program. The harvester program will automatically decide which repositories need to be harvested and do so accordingly, but it needs to be called regularly to do this. After the harvester finishes a harvest, the Web portal needs to be run to keep the index up to date. The easiest way to do this is using a shell script. The script is located at \path{/var/lib/tomcat7/webapps/Harvest.sh}
 
@@ -274,30 +377,61 @@ and then enter the following into the editor provided :
 This will cause cron to run the Harvest script every hour, on the hour.
 
 \section{Using the control panel}
+\label{sec:using_the_control_panel}
 
-To access the control panel you must click on Admin on the bottom of the left side bar of the Web site. The username and password will be those that you set up during the Setting up the configuration files part of the installation. Once logged on you will be faced with a list of known repositories. To start with this will be empty. The status of a harvest can also be seen from this control panel home page under the status column. If a harvest has been completed recently, the number of harvested records will appear in the status column. If a harvest is currently in progress, the current number of records processed will show under the status column.
+To access the control panel you must click on Admin on the bottom of the left side bar of the Web site. The username and password will be those that you set up during the Setting up the configuration files in \Cref{sec:installation_process:configuration_files} part of the installation. Once logged on you will be faced with a list of known repositories. To start with this will be empty. The status of a harvest can also be seen from this control panel home page under the status column. If a harvest has been completed recently, the number of harvested records will appear in the status column. If a harvest is currently in progress, the current number of records processed will show under the status column.
 
 \subsection{Adding a repository}
+\label{sec:using_the_control_panel:adding_a_repository}
 
 \begin{figure}[h]
  \centering
  \fbox{%
-   \includegraphics[width=\textwidth]{adding_repository_infomation_x.eps}%
+   \includegraphics[width=\textwidth]{figures/adding_repository_information.eps}%
  }%
  \caption{Adding a new repository entry}
  \label{adding_repository_information}
 \end{figure}
 
 To add a new repository for harvesting, click the Add Repository link at the bottom of the center window. The screenshot in \Cref{adding_repository_information} will appear. Here is a summary of what each of the fields below mean.
-ID: The short (no spaces) name that is used to identify where records come from (can't change once set). Name: Full Institution name BaseURL: The url of the servlet that we wish to harvest from. Must include the http://. MetadataPrefix: The format of the metadata we wish to harvest. Some repositories will support multiple formats. SetSpec: The remote server's set that we wish to harvest. Leave this empty to harvest the whole repository. Harvest Interval: Time in seconds between consecutive harvests of this repository. Last Harvest: When to harvest from (will automatically be set to the last harvest date after each harvest). Delete this to perform a full re-harvest of a repository.
+
+\paragraph{ID}
+
+The short (no spaces) name that is used to identify where records come from (can't change once set). 
+
+\paragraph{Name} 
+
+Full Institution name 
+
+\paragraph{BaseURL}
+
+The url of the servlet that we wish to harvest from. Must include the http://. 
+
+\paragraph{MetadataPrefix}
+
+The format of the metadata we wish to harvest. Some repositories will support multiple formats. 
+
+\paragraph{SetSpec}
+
+The remote server's set that we wish to harvest. Leave this empty to harvest the whole repository. 
+
+\paragraph{Harvest Interval}
+
+Time in seconds between consecutive harvests of this repository. 
+
+\paragraph{Last Harvest} 
+
+When to harvest from (will automatically be set to the last harvest date after each harvest). Delete this to perform a full re-harvest of a repository.
+
 The required fields are ID, Name, BaseURL and metadataPrefix. Once these are filled in, you can press save to save the repository. At the next scheduled harvest, the harvester will perform a full harvest of this new repository.
 
 \subsection{Editing a repository}
+\label{sec:using_the_control_panel:editing_a_repository}
 
 \begin{figure}[h]
  \centering
  \fbox{%
-   \includegraphics[width=\textwidth]{editing_repository_infomation_x-stroked.eps}%
+   \includegraphics[width=\textwidth]{figures/editing_repository_information.eps}%
  }%
  \caption{Editing repository entries information}
  \label{editing_repository_information}
@@ -307,11 +441,12 @@ To edit a repository that is already there, simply click on the repository's ID 
 This will bring up the same form as for creating a new repository, except with the clicked-on repository's settings. Once done editing, remember to click save.
 
 \subsection{Deleting a repository}
+\label{sec:using_the_control_panel:deleting_a_repository}
 
 \begin{figure}[h]
  \centering
  \fbox{%
-   \includegraphics[width=\textwidth]{deleting_repository_infomation_x-stroked.eps}%
+   \includegraphics[width=\textwidth]{figures/deleting_repository_information.eps}%
  }%
  \caption{Deleting existing repository entries}
  \label{deleting_repository_entry}
@@ -320,90 +455,175 @@ This will bring up the same form as for creating a new repository, except with t
 To delete repository, click on the repository's ID, as above in Editing a repository, but instead of clicking save at the bottom of the screen, click delete repository, as shown in \Cref{deleting_repository_entry}.
 
 \section{Class summaries}
+\label{sec:class_summaries}
 
 \subsection{Harvester}
+\label{sec:class_summaries:harvester}
 
 The harvester servlet is the part of the program that retrieves records from a remote repository and then stores them locally in an SQL database.
 
-OAIHarvest: Is the entry point for the harvesting process. If passed no arguments it will check all repositories in the database to see if they need harvesting. If passed a repository ID, it will harvest that particular repository.
+\paragraph{OAIHarvest}
 
-Config: Information for the database that has been read from the configuration files.
+Is the entry point for the harvesting process. If passed no arguments it will check all repositories in the database to see if they need harvesting. If passed a repository ID, it will harvest that particular repository.
 
-Database: A database interaction file that serves as an interface for the harvester to interact with the SQL database.
+\paragraph{Config}
 
-Repository: A class that loads and stores configuration details about a particular repository or harvest. This represents the state of a harvest and will update the repository information as the harvest progresses.
+Information for the database that has been read from the configuration files.
 
-OAIRequest: A class to send a request and process a response from an OAI source.
+\paragraph{Database}
 
-OAIResponseHandler: Stores and parses the response to the OAI-PMH request in the database.
+A database interaction file that serves as an interface for the harvester to interact with the SQL database.
 
-OAIRecord: Object to represent a single record.
+\paragraph{Repository}
 
-HarvesterControlPanel: Responsible for constructing the harvester control panel and processing the actions associated with it.
+A class that loads and stores configuration details about a particular repository or harvest. This represents the state of a harvest and will update the repository information as the harvest progresses.
 
-HTMLWriter: A utility class used to wrap the harvester control panel output in valid html tags.
+\paragraph{OAIRequest}
+
+A class to send a request and process a response from an OAI source.
+
+\paragraph{OAIResponseHandler}
+
+Stores and parses the response to the OAI-PMH request in the database.
+
+\paragraph{OAIRecord}
+
+Object to represent a single record.
+
+\paragraph{HarvesterControlPanel}
+
+Responsible for constructing the harvester control panel and processing the actions associated with it.
+
+\paragraph{HTMLWriter}
+
+A utility class used to wrap the harvester control panel output in valid html tags.
 
 \subsection{Repository}
+\label{sec:class_summaries:repository}
 
 The repository provides a standardised interface for public entities to access the records database. All requests are via URL's and all replies are via XML output.
 
-Config: Floating object containing configuration information for the server. Passed from class to class.
+\paragraph{Config}
 
-DatabaseConnection: Connects to the SQL database and is used to perform any database queries.
+Floating object containing configuration information for the server. Passed from class to class.
 
-OAIServlet: Inherits from HttpServlet. This is the starting point for the repository program, and depending on the URL string received, a different action will be carried out.
+\paragraph{DatabaseConnection}
 
-Response: Abstract class providing a generic layout for a servlet response. Each verb will inherit from this class to provide its response.
+Connects to the SQL database and is used to perform any database queries.
 
-ResponseFormatter: A utility class to write out the generic information at the beginning and end of an OAI-PMH XML file, inserting the different response content in the correct spots.
+\paragraph{OAIServlet}
 
-CheckParams: A utility class used to check whether the given URL parameters are in the correct format and are all expected. If they aren't, the servlet will provide an error response.
+Inherits from HttpServlet. This is the starting point for the repository program, and depending on the URL string received, a different action will be carried out.
 
-GetRecord: Inherits Response. Class to handle the GetRecord request.
+\paragraph{Response}
 
-Identify: Inherits Response. Class to deal with an Identify request.
+Abstract class providing a generic layout for a servlet response. Each verb will inherit from this class to provide its response.
 
-ListIdentifiers: Inherits Response. Class to deal with a ListIdentifiers request.
+\paragraph{ResponseFormatter}
 
-ListMetadataFormats: Inherits Response. Lists the currently supported metadata formats of the server (based on config.xml).
+A utility class to write out the generic information at the beginning and end of an OAI-PMH XML file, inserting the different response content in the correct spots.
 
-ListRecords: Inherits Response. Lists all records that fall within the given parameters.
+\paragraph{CheckParams}
 
-ListSets: Inherits Response. Lists all sets in the repository.
+A utility class used to check whether the given URL parameters are in the correct format and are all expected. If they aren't, the servlet will provide an error response.
+
+\paragraph{GetRecord}
+
+Inherits Response. Class to handle the GetRecord request.
+
+\paragraph{Identify}
+
+Inherits Response. Class to deal with an Identify request.
+
+\paragraph{ListIdentifiers}
+
+Inherits Response. Class to deal with a ListIdentifiers request.
+
+\paragraph{ListMetadataFormats}
+
+Inherits Response. Lists the currently supported metadata formats of the server (based on config.xml).
+
+\paragraph{ListRecords}
+
+Inherits Response. Lists all records that fall within the given parameters.
+
+\paragraph{ListSets}
+
+Inherits Response. Lists all sets in the repository.
 
 \subsection{Web portal}
+\label{sec:class_summaries:web_portal}
 
 The Web portal is what users see when they access the site from the outside. It is responsible for providing search and browse services, and thus must index the database records in a database of its own.
 
-ConfigurationManager: Controls access to and sharing of configuration settings.
+\paragraph{ConfigurationManager}
 
-DatabaseBrowser: Used to run MySQL queries on the portal database.
+Controls access to and sharing of configuration settings.
 
-DatabaseUpdater: Creates a link with the repository database and updates any new records that have been captured by the harvester into the portal database.
+\paragraph{DatabaseBrowser}
 
-FileDocument: Creates Lucene Documents for indexing a metadata record.
+Used to run MySQL queries on the portal database.
 
-HarvestingMain: Used to run the application that will harvest data from the local repository and place it in database tables that will make it easier for users to browse the data in the online application interface.
+\paragraph{DatabaseUpdater}
 
-HarvestRequest: Contains all the OAI-PMH requests for the metadata harvester.
+Creates a link with the repository database and updates any new records that have been captured by the harvester into the portal database.
 
-Index: Dynamically generates the index page.
+\paragraph{FileDocument}
 
-IndexFiles: Used to index all the records that are within the repository database so that they can be searched easily.
+Creates Lucene Documents for indexing a metadata record.
 
-Record: Represents an object formed from the xml record that is read from the repository.
+\paragraph{HarvestingMain}
 
-ResponseParser: This class is used to parse the responses that are received from the server
+Used to run the application that will harvest data from the local repository and place it in database tables that will make it easier for users to browse the data in the online application interface.
 
-ResultFormat: Formats the results that have been returned from a browsing request.
+\paragraph{HarvestRequest}
 
-ResumptionToken: Forms an object that represents the resumption token returned by the repository in a list records request.
+Contains all the OAI-PMH requests for the metadata harvester.
 
-SearchEngine: This class is used to run a search query on the index created by the IndexFiles class using the Lucene library.
+\paragraph{Index}
+
+Dynamically generates the index page.
+
+\paragraph{IndexFiles}
+
+Used to index all the records that are within the repository database so that they can be searched easily.
+
+\paragraph{Record}
+
+Represents an object formed from the xml record that is read from the repository.
+
+\paragraph{ResponseParser}
+
+This class is used to parse the responses that are received from the server
+
+\paragraph{ResultFormat}
+
+Formats the results that have been returned from a browsing request.
+
+\paragraph{ResumptionToken}
+
+Forms an object that represents the resumption token returned by the repository in a list records request.
+
+\paragraph{SearchEngine}
+
+This class is used to run a search query on the index created by the IndexFiles class using the Lucene library.
+
+\ifdefined\phantomsection
+  \phantomsection  % makes hyperref recognize this section properly for pdf link
+\else
+\fi
+\addcontentsline{toc}{section}{Bibliography}
+
+\begingroup
+\setlength\bibitemsep{10pt} % Increase spacing between entries
+\sloppy
+\printbibliography
+\endgroup
 
 \appendix
 
 \section{Installation package}
+\label{sec:installation_package}
 
 \begin{lstlisting}[language=bash]
 phiri@phiri-PROLINE-DH55TC:~/Sandbox$ tree -d etdportal/
@@ -444,8 +664,10 @@ phiri@phiri-PROLINE-DH55TC:~/Sandbox$
 
 
 \section{Database schema}
+\label{sec:database_schema}
 
 \subsection{Portal database}
+\label{sec:database_schema:portal_database}
 
 \begin{lstlisting}[language=SQL]
 SET @saved_cs_client     = @@character_set_client;
@@ -527,7 +749,8 @@ CREATE TABLE `CountCache` (
 SET character_set_client = @saved_cs_client;
 \end{lstlisting}
 
-\subsection{Havester database}
+\subsection{Harvester database}
+\label{sec:database_schema:harvester_database}
 
 \begin{lstlisting}[language=SQL]
 CREATE TABLE `Archive` (

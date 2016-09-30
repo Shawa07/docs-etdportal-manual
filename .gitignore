@@ -1,0 +1,16 @@
+# Auto-generated files
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.dvi
+*.log
+*.out
+*.ps
+*.xml
+
+# Backup files
+*~
+*.backup
+*.bak
+*.swp
