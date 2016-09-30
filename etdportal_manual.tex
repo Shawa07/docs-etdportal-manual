@@ -221,27 +221,27 @@ The following instructions assume that the server will be running Ubuntu---testi
 Before installing the ETD software, a few prerequisite programs need to be installed. If any of the below programs are not installed, follow the steps below to install them. Firstly the Java JDK must be available. To install Java type the following into an open console window: 
 
 \begin{lstlisting}[language=bash]
- sudo apt-get install openjdk-8-jdk
+sudo apt-get install openjdk-8-jdk
 \end{lstlisting}
 
 
 Follow the prompts to finish installing Java. Next you must ensure that Tomcat6 is installed. To install tomcat, type the following into an open console window: 
 
 \begin{lstlisting}[language=bash]
- sudo apt-get install tomcat7
+sudo apt-get install tomcat7
 \end{lstlisting}
 
 
 Again follow the prompts to complete installation. You must also have an Apache Web server available. To install the Apache Web server type the following into a open console window: 
 
 \begin{lstlisting}[language=bash]
- sudo apt-get install apache2
+sudo apt-get install apache2
 \end{lstlisting}
 
 And follow the prompts to install it. This should complete the installation of the prerequisite software, and you should now be able to go on to the main installation. We also need MySQL installed for the program databases (if it is not already installed): 
 
 \begin{lstlisting}[language=bash]
- sudo apt-get install mysql-server
+sudo apt-get install mysql-server
 \end{lstlisting}
 
 \subsection{Installation}
@@ -256,13 +256,13 @@ git clone git@simba.cs.uct.ac.za:etdportal.git
 Once you have the software available, open a console window and navigate to the folder containing the ETD software. To compile the software (on a non read-only disk, such as a hard drive) type the following into the console window: 
 
 \begin{lstlisting}[language=bash]
- make
+make
 \end{lstlisting}
 
 This will compile the necessary files for use. Next type in the following to install the software in the correct locations: 
 
 \begin{lstlisting}[language=bash]
- sudo make install
+sudo make install
 \end{lstlisting}
 
 This will install the software into the correct locations. The make clean command is available to delete all compiled or auto-generated files in case you would like to recompile the project.
@@ -283,13 +283,13 @@ GRANT ALL ON etd_dba.* TO 'etduser'@'localhost';
 We will use a SQL script to create the required tables: 
 
 \begin{lstlisting}[language=bash]
- mysql etd_dba < harvester/WEB-INF/db/create_db.sql -u etduser -p
+mysql etd_dba < harvester/WEB-INF/db/create_db.sql -u etduser -p
 \end{lstlisting}
 
 And do the same for the other database. 
 
 \begin{lstlisting}[language=bash]
- mysql etd_dbb < portal/WEB-INF/db/create_db.sql -u etduser -p
+mysql etd_dbb < portal/WEB-INF/db/create_db.sql -u etduser -p
 \end{lstlisting}
 
 Once this is done, you should have two separate databases: the repository database with 2 tables in it and the portal database with 12 tables in it. This concludes the database setup.
@@ -302,21 +302,21 @@ Now we need to configure the software for the local system. To start doing this 
 Once there, copy the \texttt{config.xml.orig} to \texttt{config.xml} and customize the configuration file for the server. 
 
 \begin{lstlisting}[language=bash]
- sudo cp config.xml.orig config.xml 
- sudo gedit config.xml
+sudo cp config.xml.orig config.xml 
+sudo gedit config.xml
 \end{lstlisting}
 
 In the configuration file, remember to change the preset database details that are there to the ones you set in the database set up. Now we need to add a manager account to the tomcat users file so that we can access the harvester control panel securely. 
 
 \begin{lstlisting}[language=bash]
- sudo gedit /var/lib/tomcat7/conf/tomcat-users.xml
+sudo gedit /var/lib/tomcat7/conf/tomcat-users.xml
 \end{lstlisting}
 
 Once open add a new role for etdmanager in the \texttt{<tomcat-users>} tag and add a new username and password with this role. 
 
 \begin{lstlisting}[language=XML]
- <role rolename=etdmanager/> 
- <user username=mandy password=your\_pass roles=etdmanager/>
+<role rolename=etdmanager/> 
+<user username=mandy password=your\_pass roles=etdmanager/>
 \end{lstlisting}
 
 \subsection{Apache2}
@@ -327,7 +327,7 @@ The servlets will now function, but they will not be easy to access, so we need 
 Open \texttt{/var/lib/tomcat7/conf/server.xml} (as root) and add 
 
 \begin{lstlisting}[language=XML]
- <Context path="" docBase=portal//> 
+<Context path="" docBase=portal//> 
 \end{lstlisting}
 
 inside the \texttt{<Host>} tags (so just below the line with \texttt{xmlValidation=false xmlNameSpaceAware=false>})
@@ -335,10 +335,10 @@ inside the \texttt{<Host>} tags (so just below the line with \texttt{xmlValidati
 Now we need to configure apache: 
 
 \begin{lstlisting}[language=bash]
- a2enmod rewrite 
- a2enmod proxy 
- a2enmod proxy_http 
- a2ensite etd
+a2enmod rewrite 
+a2enmod proxy 
+a2enmod proxy_http 
+a2ensite etd
 \end{lstlisting}
 
 And then we change the servername field to \texttt{www.netd.ac.za } in \path{/etc/apache2/sites-available/etd} (as root).
@@ -348,13 +348,13 @@ If we are testing on a local machine, we need to add www.netd.ac.za to the \path
 Finally we need to restart the apache web server: 
 
 \begin{lstlisting}[language=bash]
- /etc/init.d/apache2 restart
+/etc/init.d/apache2 restart
 \end{lstlisting}
 
 And restart the tomcat server: 
 
 \begin{lstlisting}[language=bash]
- /etc/init.d/tomcat7 restart
+/etc/init.d/tomcat7 restart
 \end{lstlisting}
 
 \subsection{Crontab}
@@ -365,13 +365,13 @@ Once the portal has been set up, we need to set up cron (linux scheduler) to reg
 Adding the script to a cron job that runs every hour is done as follows: 
 
 \begin{lstlisting}[language=bash]
- crontab -e
+crontab -e
 \end{lstlisting}
 
 and then enter the following into the editor provided : 
 
 \begin{lstlisting}[language=bash]
- 0 * * * * /var/lib/tomcat7/webapps/harvester/Harvest.sh
+0 * * * * /var/lib/tomcat7/webapps/harvester/Harvest.sh
 \end{lstlisting}
 
 This will cause cron to run the Harvest script every hour, on the hour.
