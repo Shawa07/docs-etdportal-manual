@@ -213,7 +213,7 @@ The portal database contains a collection of interlinked tables which are used t
 \section{Installation process}
 \label{sec:installation_process}
 
-The following instructions assume that the server will be running Ubuntu---testing has been done on Ubuntu 10.04 and 16.04. If you are running a different operating system, please adapt them accordingly.
+The following instructions assume that the server will be running Ubuntu---testing has been done on Ubuntu 20.04. If you are running a different operating system, please adapt them accordingly.
 
 \subsection{Pre-requisites}
 \label{sec:installation_process:prerequisites}
@@ -221,14 +221,14 @@ The following instructions assume that the server will be running Ubuntu---testi
 Before installing the ETD software, a few prerequisite programs need to be installed. If any of the below programs are not installed, follow the steps below to install them. Firstly the Java JDK must be available. To install Java type the following into an open console window: 
 
 \begin{lstlisting}[language=bash]
-sudo apt-get install openjdk-8-jdk
+sudo apt-get install default-jdk
 \end{lstlisting}
 
 
-Follow the prompts to finish installing Java. Next you must ensure that Tomcat6 is installed. To install tomcat, type the following into an open console window: 
+Follow the prompts to finish installing Java. Next you must ensure that Tomcat9 is installed. To install tomcat, type the following into an open console window: 
 
 \begin{lstlisting}[language=bash]
-sudo apt-get install tomcat7
+sudo apt-get install tomcat9
 \end{lstlisting}
 
 
@@ -250,7 +250,7 @@ sudo apt-get install mysql-server
 Currently we are using the GIT version control system to work on the software. To get the latest version, browse to a folder where you would like to put the installation files and type the following:
 
 \begin{lstlisting}[language=bash]
-git clone git@simba.cs.uct.ac.za:etdportal.git 
+git clone https://github.com/lightonphiri/etdportal.git 
 git checkout v1.2
 \end{lstlisting}
 
@@ -274,23 +274,23 @@ This will install the software into the correct locations. The make clean comman
 Now we need to set up the MySQL databases that the server will use to store records. We will need two separate databases for the software---one for the harvester and repository and the other for the Web portal. Create two empty databases with different usernames and passwords. 
 
 \begin{lstlisting}[language=SQL]
-CREATE USER 'etduser'@'localhost' IDENTIFIED BY 'etduser'; 
+CREATE USER 'netdportal'@'localhost' IDENTIFIED BY 'netdportal'; 
 CREATE DATABASE etd_dba; 
-CREATE DATABASE etd_dbb; 
-GRANT ALL ON etd_dba.* TO 'etduser'@'localhost';
-GRANT ALL ON etd_dba.* TO 'etduser'@'localhost';
+CREATE DATABASE etd_dbp; 
+GRANT ALL ON etd_dba.* TO 'netdportal'@'localhost';
+GRANT ALL ON etd_dbp.* TO 'netdportal'@'localhost';
 \end{lstlisting}
 
 We will use a SQL script to create the required tables: 
 
 \begin{lstlisting}[language=bash]
-mysql etd_dba < harvester/WEB-INF/db/create_db.sql -u etduser -p
+mysql etd_dba < harvester/WEB-INF/db/create_db.sql -u netdportal -p
 \end{lstlisting}
 
 And do the same for the other database. 
 
 \begin{lstlisting}[language=bash]
-mysql etd_dbb < portal/WEB-INF/db/create_db.sql -u etduser -p
+mysql etd_dbp < portal/WEB-INF/db/create_db.sql -u netdportal -p
 \end{lstlisting}
 
 Once this is done, you should have two separate databases: the repository database with 2 tables in it and the portal database with 12 tables in it. This concludes the database setup.
@@ -310,7 +310,7 @@ sudo gedit config.xml
 In the configuration file, remember to change the preset database details that are there to the ones you set in the database set up. Now we need to add a manager account to the tomcat users file so that we can access the harvester control panel securely. 
 
 \begin{lstlisting}[language=bash]
-sudo gedit /var/lib/tomcat7/conf/tomcat-users.xml
+sudo gedit /var/lib/tomcat9/conf/tomcat-users.xml
 \end{lstlisting}
 
 Once open add a new role for etdmanager in the \texttt{<tomcat-users>} tag and add a new username and password with this role. 
@@ -355,13 +355,13 @@ Finally we need to restart the apache web server:
 And restart the tomcat server: 
 
 \begin{lstlisting}[language=bash]
-/etc/init.d/tomcat7 restart
+/etc/init.d/tomcat9 restart
 \end{lstlisting}
 
 \subsection{Crontab}
 \label{sec:installation_process:crontab}
 
-Once the portal has been set up, we need to set up cron (linux scheduler) to regularly run the harvester program. The harvester program will automatically decide which repositories need to be harvested and do so accordingly, but it needs to be called regularly to do this. After the harvester finishes a harvest, the Web portal needs to be run to keep the index up to date. The easiest way to do this is using a shell script. The script is located at \path{/var/lib/tomcat7/webapps/Harvest.sh}
+Once the portal has been set up, we need to set up cron (linux scheduler) to regularly run the harvester program. The harvester program will automatically decide which repositories need to be harvested and do so accordingly, but it needs to be called regularly to do this. After the harvester finishes a harvest, the Web portal needs to be run to keep the index up to date. The easiest way to do this is using a shell script. The script is located at \path{/var/lib/tomcat9/webapps/Harvest.sh}
 
 Adding the script to a cron job that runs every hour is done as follows: 
 
@@ -372,7 +372,7 @@ crontab -e
 and then enter the following into the editor provided : 
 
 \begin{lstlisting}[language=bash]
-0 * * * * /var/lib/tomcat7/webapps/harvester/Harvest.sh
+0 * * * * /var/lib/tomcat9/webapps/harvester/Harvest.sh
 \end{lstlisting}
 
 This will cause cron to run the Harvest script every hour, on the hour.
